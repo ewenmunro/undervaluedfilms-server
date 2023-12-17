@@ -34,7 +34,7 @@ CREATE TABLE Mentions (
     mention_id SERIAL PRIMARY KEY,
     user_id INT REFERENCES Users(user_id),
     film_id INT REFERENCES Films(film_id),
-    mentioned BOOLEAN NOT NULL
+    mentioned BOOLEAN NOT NULL,
     -- Define a unique constraint on user_id and film_id
     CONSTRAINT unique_user_film_mention UNIQUE (user_id, film_id)
 );
@@ -42,7 +42,7 @@ CREATE TABLE Mentions (
 -- Create the Watch Link Clicks table
 CREATE TABLE Watch_Link_Clicks (
     click_id SERIAL PRIMARY KEY,
-    user_id TEXT REFERENCES Users(user_id),
+    user_id INT REFERENCES Users(user_id),
     film_id INT REFERENCES Films(film_id),
     click BOOLEAN NOT NULL DEFAULT false,
     click_timestamp TIMESTAMPTZ DEFAULT NOW()
