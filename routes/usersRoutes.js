@@ -7,6 +7,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const config = require("../config");
 const authMiddleware = require("../middleware/authMiddleware");
+const cron = require("node-cron");
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -36,14 +37,14 @@ const sendVerificationEmail = async (user) => {
     transporter.sendMail(mailOptions, async (error, info) => {
       if (error) {
         console.error(error);
-        // Handle error, e.g., return an error response to the client
+        // Handle error
       } else {
         // Email sent successfully
       }
     });
   } catch (error) {
     console.error("Failed to send verification email:", error);
-    // Handle error, e.g., return an error response to the client
+    // Handle error
   }
 };
 
@@ -101,13 +102,26 @@ router.get("/verification/:token", async (req, res) => {
       return res.status(401).json({ success: false });
     }
 
-    // Mark the user as verified (update your database accordingly)
+    // Mark the user as verified
     await User.markUserAsVerified(user.user_id);
 
     res.status(201).json({ success: true });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false });
+  }
+});
+
+// Scheduled job to delete unverified users older than 48 hours
+cron.schedule("0 0 * * *", async () => {
+  try {
+    // 48hr cut off timestamp
+    const cutoffTimestamp = new Date(Date.now() - 48 * 60 * 60 * 1000);
+
+    // Delete unverified users older than 48hrs
+    await User.deleteUnverifiedUsersOlderThan48Hours(cutoffTimestamp);
+  } catch (error) {
+    console.error(error);
   }
 });
 

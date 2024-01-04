@@ -77,6 +77,22 @@ const User = {
     }
   },
 
+  // Delete unverified users older than a specified timestamp
+  deleteUnverifiedUsersOlderThan48Hours: async (cutoffTimestamp) => {
+    try {
+      const query = `
+      DELETE FROM users
+      WHERE verified = false AND created_at < $1;
+    `;
+
+      const values = [cutoffTimestamp];
+      await db.query(query, values);
+    } catch (error) {
+      console.error("Failed to delete unverified users:", error);
+      throw error;
+    }
+  },
+
   // Find user by user id
   findByUserId: async (userId) => {
     try {

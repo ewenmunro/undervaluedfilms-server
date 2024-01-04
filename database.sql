@@ -15,7 +15,8 @@ CREATE TABLE Users (
     password VARCHAR(255) NOT NULL,
     refresh_token VARCHAR(255),
     verification_token VARCHAR(255),
-    verified BOOLEAN DEFAULT false
+    verified BOOLEAN DEFAULT false,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 
