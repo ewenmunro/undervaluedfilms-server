@@ -53,6 +53,24 @@ const Film = {
       throw error;
     }
   },
+
+  // Get film details by title and release year
+  getByTitleAndYear: async (title, year) => {
+    try {
+      const query = {
+        text: "SELECT * FROM films WHERE title = $1 AND release_year = $2",
+        values: [title, year],
+      };
+
+      const result = await db.query(query);
+
+      // Return the first row if a film is found, otherwise return null
+      return result.rows.length ? result.rows[0] : null;
+    } catch (error) {
+      console.error("Error fetching film details:", error);
+      throw error;
+    }
+  },
 };
 
 module.exports = Film;

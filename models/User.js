@@ -147,6 +147,24 @@ const User = {
     }
   },
 
+  // Find user by user id
+  findByUserId: async (userId) => {
+    try {
+      const query = `
+      SELECT * FROM users
+      WHERE user_id = $1;
+    `;
+
+      const values = [userId];
+      const result = await db.query(query, values);
+
+      return result.rows[0];
+    } catch (error) {
+      console.error("Failed to find user by user ID:", error);
+      throw error;
+    }
+  },
+
   // Find user profile by username
   findUserProfileByUsername: async (username) => {
     try {
