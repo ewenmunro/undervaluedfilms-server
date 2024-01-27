@@ -91,6 +91,8 @@ async function sendReviewEmail(film, user) {
       Description: ${film.description}
 
       Approve Email Template:
+      RE: Film Submission Approved
+
       Dear ${user.username},
       
       Your film submission for "${film.title} (${film.release_year})" has been approved. You can view your submission here: https://www.undervaluedfilms.com/${formattedTitle}-${film.release_year}
@@ -101,6 +103,8 @@ async function sendReviewEmail(film, user) {
       Undervalued Films
 
       Reject Email Template:
+      RE: Film Submission Rejected
+
       Hi ${user.username},
       
       Your film submission for "${film.title}} (${film.release_year})" has been rejected.
