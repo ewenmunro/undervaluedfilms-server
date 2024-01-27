@@ -109,7 +109,7 @@ async function sendReviewEmail(film, user) {
 }
 
 // Route to reject film details submitted by a user
-router.get(
+router.post(
   "/reject/:title/:release_year/:user_id/:rejection_identifier",
   async (req, res) => {
     try {
@@ -188,8 +188,8 @@ async function sendRejectionEmail(userEmail, username, filmTitle, filmYear) {
   }
 }
 
-// Route to manually approve film details
-router.get(
+// Route to approve film details
+router.post(
   "/approve/:title/:release_year/:description/:user_id/:approval_identifier",
   async (req, res) => {
     try {
