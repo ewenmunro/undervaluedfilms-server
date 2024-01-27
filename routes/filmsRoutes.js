@@ -68,10 +68,10 @@ router.post("/reviewfilm", authMiddleware, async (req, res) => {
 // Function to send review email
 async function sendReviewEmail(film, user) {
   try {
-    // // Convert title and description to lowercase, and replace spaces with dashes
-    // const formattedTitle = encodeURIComponent(
-    //   film.title.toLowerCase().replace(/\s+/g, "-")
-    // );
+    // Convert title and description to lowercase, and replace spaces with dashes
+    const formattedTitle = encodeURIComponent(
+      film.title.toLowerCase().replace(/\s+/g, "-")
+    );
     // const formattedDescription = encodeURIComponent(
     //   film.description.toLowerCase().replace(/\s+/g, "-")
     // );
@@ -89,6 +89,26 @@ async function sendReviewEmail(film, user) {
       Title: ${film.title}
       Release Year: ${film.release_year}
       Description: ${film.description}
+
+      Approve Email Template:
+      Dear ${user.username},
+      
+      Your film submission for "${film.title} (${film.release_year})" has been approved. You can view your submission here: https://www.undervaluedfilms.com/${formattedTitle}-${film.release_year}
+      
+      Thank you for your contribution!
+      
+      Sincerely,
+      Undervalued Films
+
+      Reject Email Template:
+      Hi ${user.username},
+      
+      Your film submission for "${film.title}} (${film.release_year})" has been rejected.
+      
+      If you have any questions or concerns, please contact us.
+      
+      Sincerely,
+      Undervalued Films
     `;
 
     // Review Links:
