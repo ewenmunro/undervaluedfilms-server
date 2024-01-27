@@ -69,14 +69,16 @@ router.post("/reviewfilm", authMiddleware, async (req, res) => {
 async function sendReviewEmail(film, user) {
   try {
     // Convert title and description to lowercase, and replace spaces with dashes
-    const formattedTitle = film.title.toLowerCase().replace(/\s+/g, "-");
-    const formattedDescription = film.description
-      .toLowerCase()
-      .replace(/\s+/g, "-");
+    const formattedTitle = encodeURIComponent(
+      film.title.toLowerCase().replace(/\s+/g, "-")
+    );
+    const formattedDescription = encodeURIComponent(
+      film.description.toLowerCase().replace(/\s+/g, "-")
+    );
 
     // Unique identifier for the rejection link
-    const rejectionIdentifier = generateUniqueIdentifier();
-    const approvalIdentifier = generateUniqueIdentifier();
+    const rejectionIdentifier = encodeURIComponent(generateUniqueIdentifier());
+    const approvalIdentifier = encodeURIComponent(generateUniqueIdentifier());
 
     // Email content
     const emailContent = `
@@ -112,6 +114,11 @@ router.get(
   async (req, res) => {
     try {
       const { title, release_year, user_id, rejection_identifier } = req.params;
+
+      console.log(title);
+      console.log(release_year);
+      console.log(user_id);
+      console.log(rejection_identifier);
 
       // Validate rejection identifier
       if (!isValidRejectionIdentifier(rejection_identifier)) {
@@ -188,6 +195,12 @@ router.get(
     try {
       const { title, release_year, description, user_id, approval_identifier } =
         req.params;
+
+      console.log(title);
+      console.log(release_year);
+      console.log(description);
+      console.log(user_id);
+      console.log(approval_identifier);
 
       // Validate approval identifier
       if (!isValidApprovalIdentifier(approval_identifier)) {
