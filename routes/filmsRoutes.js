@@ -1,18 +1,14 @@
 const express = require("express");
 const router = express.Router();
 const Film = require("../models/Film");
-// const User = require("../models/User");
+const User = require("../models/User");
 const authMiddleware = require("../middleware/authMiddleware");
 const nodemailer = require("nodemailer");
 const config = require("../config");
-// const { v4: uuidv4 } = require("uuid");
 const dotenv = require("dotenv");
 
 // Load environment variables from .env file
 dotenv.config();
-
-// // Get server domain
-// const server_domain = process.env.SERVER_DOMAIN;
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -21,11 +17,6 @@ const transporter = nodemailer.createTransport({
     pass: config.password,
   },
 });
-
-// // Function to generate a unique identifier
-// function generateUniqueIdentifier() {
-//   return uuidv4();
-// }
 
 // Route to check if a film already exists
 router.get("/checkfilm", async (req, res) => {
@@ -72,13 +63,10 @@ async function sendReviewEmail(film, user) {
     const formattedTitle = encodeURIComponent(
       film.title.toLowerCase().replace(/\s+/g, "-")
     );
-    // const formattedDescription = encodeURIComponent(
-    //   film.description.toLowerCase().replace(/\s+/g, "-")
-    // );
 
-    // // Unique identifier for the rejection link
-    // const rejectionIdentifier = encodeURIComponent(generateUniqueIdentifier());
-    // const approvalIdentifier = encodeURIComponent(generateUniqueIdentifier());
+    const formattedDescription = encodeURIComponent(
+      film.description.toLowerCase().replace(/\s+/g, "-")
+    );
 
     // Email content
     const emailContent = `
@@ -90,34 +78,9 @@ async function sendReviewEmail(film, user) {
       Release Year: ${film.release_year}
       Description: ${film.description}
 
-      Approve Email Template:
-      RE: Film Submission Approved
-
-      Dear ${user.username},
-      
-      Your film submission for "${film.title} (${film.release_year})" has been approved. You can view your submission here: https://www.undervaluedfilms.com/${formattedTitle}-${film.release_year}
-      
-      Thank you for your contribution!
-      
-      Sincerely,
-      Undervalued Films
-
-      Reject Email Template:
-      RE: Film Submission Rejected
-
-      Hi ${user.username},
-      
-      Your film submission for "${film.title}} (${film.release_year})" has been rejected.
-      
-      If you have any questions or concerns, please contact us.
-      
-      Sincerely,
-      Undervalued Films
+      Master Add Film:
+      https://www.undervaluedfilms.com/master/addfilm/${formattedTitle}/${film.release_year}/${formattedDescription}/${user.user_id}
     `;
-
-    // Review Links:
-    // - Approve: ${server_domain}/approve/${formattedTitle}/${film.release_year}/${formattedDescription}/${user.user_id}/${approvalIdentifier}
-    // - Reject: ${server_domain}/reject/${formattedTitle}/${film.release_year}/${user.user_id}/${rejectionIdentifier}
 
     // Email options
     const mailOptions = {
@@ -135,171 +98,167 @@ async function sendReviewEmail(film, user) {
   }
 }
 
-// // Route to reject film details submitted by a user
-// router.post(
-//   "/reject/:title/:release_year/:user_id/:rejection_identifier",
-//   async (req, res) => {
-//     try {
-//       const { title, release_year, user_id, rejection_identifier } = req.params;
+// Route to reject film details submitted by a user
+router.post("/reject", authMiddleware, async (req, res) => {
+  try {
+    const { title, release_year, userId } = req.body;
 
-//       // Validate rejection identifier
-//       if (!isValidRejectionIdentifier(rejection_identifier)) {
-//         throw new Error("Invalid rejection identifier.");
-//       }
+    // Retrieving Master User's details
+    const masterUser = req.user;
 
-//       // Format the title: make the first letter of each word uppercase and replace dashes with spaces
-//       const formattedTitle = title
-//         .split("-")
-//         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-//         .join(" ");
+    // Format the title: make the first letter of each word uppercase and replace dashes with spaces
+    const formattedTitle = title
+      .split("-")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
 
-//       // Fetch user details from the database using user_id
-//       const user = await User.findByUserId(user_id);
+    // Making sure the userId from the input form is an integer
+    const user_id = parseInt(userId, 10);
 
-//       // Throw error if user is not found
-//       if (!user) {
-//         throw new Error("User not found for the given user_id.");
-//       }
+    // Fetch user details from the database using user_id
+    const user = await User.findByUserId(user_id);
 
-//       // Send rejection email to the user
-//       await sendRejectionEmail(
-//         user.email,
-//         user.username,
-//         formattedTitle,
-//         release_year
-//       );
+    // Throw error if user is not found
+    if (!user) {
+      throw new Error("User not found for the given user_id.");
+    }
 
-//       res
-//         .status(200)
-//         .json({ message: `${formattedTitle} rejected successfully` });
-//     } catch (error) {
-//       console.error(error);
-//       res.status(500).json({ error: "Failed to reject film" });
-//     }
-//   }
-// );
+    if (masterUser.user_id === 1) {
+      // Send rejection email to the user
+      await sendRejectionEmail(
+        user.email,
+        user.username,
+        formattedTitle,
+        release_year
+      );
 
-// // Function to send rejection email to the user
-// async function sendRejectionEmail(userEmail, username, filmTitle, filmYear) {
-//   try {
-//     // Email content
-//     const emailContent = `
-//       Hi ${username},
+      res
+        .status(200)
+        .json({ message: `${formattedTitle} rejected successfully` });
+    } else {
+      console.error("Not Master User!");
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to reject film" });
+  }
+});
 
-//       Your film submission for "${filmTitle} (${filmYear})" has been rejected.
+// Function to send rejection email to the user
+async function sendRejectionEmail(userEmail, username, filmTitle, filmYear) {
+  try {
+    // Email content
+    const emailContent = `
+      Hi ${username},
 
-//       If you have any questions or concerns, please contact us.
+      Your film submission for "${filmTitle} (${filmYear})" has been rejected.
 
-//       Sincerely,
-//       Undervalued Films
-//     `;
+      If you have any questions or concerns, please contact us.
 
-//     // Email options
-//     const mailOptions = {
-//       from: config.email,
-//       to: userEmail,
-//       subject: "Film Submission Rejected",
-//       text: emailContent,
-//     };
+      Sincerely,
+      Undervalued Films
+    `;
 
-//     // Send email
-//     await transporter.sendMail(mailOptions);
-//   } catch (error) {
-//     console.error("Error sending rejection email:", error);
-//     throw new Error("Failed to send rejection email");
-//   }
-// }
+    // Email options
+    const mailOptions = {
+      from: config.email,
+      to: userEmail,
+      subject: "Film Submission Rejected",
+      text: emailContent,
+    };
 
-// // Route to approve film details
-// router.post(
-//   "/approve/:title/:release_year/:description/:user_id/:approval_identifier",
-//   async (req, res) => {
-//     try {
-//       const { title, release_year, description, user_id, approval_identifier } =
-//         req.params;
+    // Send email
+    await transporter.sendMail(mailOptions);
+  } catch (error) {
+    console.error("Error sending rejection email:", error);
+    throw new Error("Failed to send rejection email");
+  }
+}
 
-//       // Validate approval identifier
-//       if (!isValidApprovalIdentifier(approval_identifier)) {
-//         throw new Error("Invalid approval identifier.");
-//       }
+// Route to approve film details
+router.post("/addfilm", authMiddleware, async (req, res) => {
+  try {
+    const { title, release_year, description, userId } = req.body;
 
-//       // Format the title: make the first letter of each word uppercase and replace dashes with spaces
-//       const formattedTitle = title
-//         .split("-")
-//         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-//         .join(" ");
+    // Retrieving Master User's details
+    const masterUser = req.user;
 
-//       // Format the description: make the first letter of each word uppercase and replace dashes with spaces
-//       const formattedDescription = description
-//         .split("-")
-//         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-//         .join(" ");
+    // Convert title to lowercase, and replace spaces with dashes
+    const formattedTitle = encodeURIComponent(
+      title.toLowerCase().replace(/\s+/g, "-")
+    );
 
-//       // Fetch user details from the database using user_id
-//       const user = await User.findByUserId(user_id);
+    // Making sure the userId from the input form is an integer
+    const user_id = parseInt(userId, 10);
 
-//       if (!user) {
-//         throw new Error("User not found for the given user_id.");
-//       }
+    // Fetch user details from the database using user_id
+    const user = await User.findByUserId(user_id);
 
-//       // Add film to the database
-//       await Film.create(formattedTitle, release_year, formattedDescription);
+    if (!user) {
+      throw new Error("User not found for the given user_id.");
+    }
 
-//       // Send approval email to the user
-//       await sendApprovalEmail(
-//         user.email,
-//         user.username,
-//         title,
-//         formattedTitle,
-//         release_year
-//       );
+    if (masterUser.user_id === 1) {
+      // Add film to the database
+      await Film.create(title, release_year, description);
 
-//       res.status(200).json({
-//         message: `Film "${formattedTitle}" approved and added to the database`,
-//       });
-//     } catch (error) {
-//       console.error(error);
-//       res.status(400).json({ error: error.message });
-//     }
-//   }
-// );
+      // Send approval email to the user
+      await sendApprovalEmail(
+        user.email,
+        user.username,
+        title,
+        formattedTitle,
+        release_year
+      );
 
-// // Function to send approval email to the user
-// async function sendApprovalEmail(
-//   userEmail,
-//   username,
-//   filmTitle,
-//   formattedFilmTitle,
-//   filmYear
-// ) {
-//   try {
-//     // Email content
-//     const emailContent = `
-//       Dear ${username},
+      res.status(200).json({
+        message: `Film "${title}" approved and added to the database`,
+      });
+    } else {
+      console.error("Not Master User!");
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(400).json({ error: error.message });
+  }
+});
 
-//       Your film submission for "${formattedFilmTitle} (${filmYear})" has been approved. You can view your submission here: https://www.undervaluedfilms.com/${filmTitle}-${filmYear}
+// Function to send approval email to the user
+async function sendApprovalEmail(
+  userEmail,
+  username,
+  filmTitle,
+  formattedFilmTitle,
+  filmYear
+) {
+  try {
+    // Email content
+    const emailContent = `
+      Dear ${username},
 
-//       Thank you for your contribution!
+      Your film submission for "${filmTitle} (${filmYear})" has been approved. You can view your submission here: https://www.undervaluedfilms.com/${formattedFilmTitle}-${filmYear}
 
-//       Sincerely,
-//       Undervalued Films
-//     `;
+      Thank you for your contribution!
 
-//     // Email options
-//     const mailOptions = {
-//       from: config.email,
-//       to: userEmail,
-//       subject: "Film Submission Approved",
-//       text: emailContent,
-//     };
+      Sincerely,
+      Undervalued Films
+    `;
 
-//     // Send email
-//     await transporter.sendMail(mailOptions);
-//   } catch (error) {
-//     console.error("Error sending approval email:", error);
-//     throw new Error("Failed to send approval email");
-//   }
-// }
+    // Email options
+    const mailOptions = {
+      from: config.email,
+      to: userEmail,
+      subject: "Film Submission Approved",
+      text: emailContent,
+    };
+
+    // Send email
+    await transporter.sendMail(mailOptions);
+  } catch (error) {
+    console.error("Error sending approval email:", error);
+    throw new Error("Failed to send approval email");
+  }
+}
 
 // Route to get a list of films
 router.get("/allfilms", async (req, res) => {
@@ -331,17 +290,5 @@ router.get("/filmdetails", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch film details" });
   }
 });
-
-// // Function to validate rejection identifier
-// function isValidRejectionIdentifier(identifier) {
-//   // Check if the identifier is a non-empty string
-//   return typeof identifier === "string" && identifier.length > 0;
-// }
-
-// // Function to validate approval identifier
-// function isValidApprovalIdentifier(identifier) {
-//   // Check if the identifier is a non-empty string
-//   return typeof identifier === "string" && identifier.length > 0;
-// }
 
 module.exports = router;
