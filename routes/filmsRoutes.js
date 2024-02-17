@@ -178,7 +178,7 @@ async function sendRejectionEmail(userEmail, username, filmTitle, filmYear) {
 // Route to approve film details
 router.post("/addfilm", authMiddleware, async (req, res) => {
   try {
-    const { title, release_year, description, userId } = req.body;
+    const { title, release_year, description, watchLink, userId } = req.body;
 
     // Retrieving Master User's details
     const masterUser = req.user;
@@ -200,7 +200,7 @@ router.post("/addfilm", authMiddleware, async (req, res) => {
 
     if (masterUser.user_id === 1) {
       // Add film to the database
-      await Film.create(title, release_year, description);
+      await Film.create(title, release_year, description, watchLink);
 
       // Send approval email to the user
       await sendApprovalEmail(

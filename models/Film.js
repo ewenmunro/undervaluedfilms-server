@@ -20,15 +20,15 @@ const Film = {
   },
 
   // Add film to the database
-  create: async (title, release_year, description) => {
+  create: async (title, release_year, description, watchLink) => {
     try {
       const query = `
-        INSERT INTO films (title, release_year, description)
-        VALUES ($1, $2, $3)
+        INSERT INTO films (title, release_year, description, watch_link)
+        VALUES ($1, $2, $3, $4)
         RETURNING *;
       `;
 
-      const values = [title, release_year, description];
+      const values = [title, release_year, description, watchLink];
       const result = await db.query(query, values);
 
       return result.rows[0];
