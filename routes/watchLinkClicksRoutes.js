@@ -15,6 +15,11 @@ router.get("/generatetempid", (req, res) => {
 router.post("/click", async (req, res) => {
   const { user_id, film_id } = req.body;
 
+  // If user is not logged in, use temporary user ID
+  if (!user_id) {
+    user_id = "000";
+  }
+
   try {
     // Insert a new record into the Watch Link Clicks table using the model
     const result = await WatchLinkClicks.create(user_id, film_id);
