@@ -43,7 +43,7 @@ CREATE TABLE Mentions (
 -- Create the Watch Link Clicks table
 CREATE TABLE Watch_Link_Clicks (
     click_id SERIAL PRIMARY KEY,
-    user_id INT REFERENCES Users(user_id),
+    user_id TEXT REFERENCES Users(user_id),
     film_id INT REFERENCES Films(film_id),
     click BOOLEAN NOT NULL DEFAULT false,
     click_timestamp TIMESTAMPTZ DEFAULT NOW()
