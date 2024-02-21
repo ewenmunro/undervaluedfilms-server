@@ -236,7 +236,7 @@ async function sendApprovalEmail(
     const emailContent = `
       Dear ${username},
 
-      Your film submission for "${filmTitle} (${filmYear})" has been approved. You can view your submission here: https://www.undervaluedfilms.com/${formattedFilmTitle}-${filmYear}
+      Your film submission for "${filmTitle} (${filmYear})" has been approved. You can view your submission here: https://www.undervaluedfilms.com/films/${formattedFilmTitle}-${filmYear}
 
       Thank you for your contribution!
 
